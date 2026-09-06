@@ -14,14 +14,26 @@ Browser
   │  HTTPS (bradjobe.dev's existing cert)
   ▼
 nginx (existing bradjobe.dev server block)
-  ├─ /llm-testing/          → static files
+  ├─ /llm-testing/          → static files, served from /var/www/llm-testing/
+  │                            (deliberately OUTSIDE /var/www/html — see below)
   └─ /llm-testing/api/      → reverse proxy, rate-limited, streaming (SSE)
                                   │
                                   ▼
-                        llama-server (127.0.0.1:8080 only)
+                        llama-server (127.0.0.1:8082 only)
                         systemd-managed, memory-capped, sandboxed
                         Qwen2.5-0.5B-Instruct, Q4_K_M GGUF (~470MB)
 ```
+
+This VPS also hosts an unrelated project (`ccaas`, in `/opt/ccaas`) on the
+same box. Two collisions came up while integrating this demo, both now
+resolved:
+- `ccaas-backend` and `llama-server` both defaulted to port 8080 — moved
+  `llama-server` to **8082** (ccaas is on 8081).
+- A portfolio redeploy did a full sync/replace of `/var/www/html`, which
+  silently deleted the `llm-testing` static files. Fixed by serving them
+  from `/var/www/llm-testing/` (via nginx `alias`) instead of nesting them
+  under the portfolio's own webroot — so no future portfolio deploy can
+  touch them.
 
 ## Why these choices
 
@@ -58,7 +70,7 @@ nginx (existing bradjobe.dev server block)
 - `systemd/llama-server.service` — model server unit
   (`/etc/systemd/system/llama-server.service`)
 - `frontend/llm-testing/` — static chat UI
-  (`/var/www/html/llm-testing/`)
+  (`/var/www/llm-testing/` — intentionally not under `/var/www/html/`)
 
 ## Server setup (for reference — done manually, not scripted/CI'd)
 
