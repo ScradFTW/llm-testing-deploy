@@ -1,0 +1,25 @@
+[Unit]
+Description=Genre classifier (TF-IDF + Logistic Regression) for bradjobe.dev/genre-classifier
+After=network.target
+
+[Service]
+Type=simple
+User=genre
+Group=genre
+WorkingDirectory=/opt/genre-classifier
+ExecStart=/opt/genre-classifier/venv/bin/waitress-serve --host=127.0.0.1 --port=8083 --threads=2 app:app
+Restart=always
+RestartSec=2
+
+MemoryMax=400M
+MemoryHigh=300M
+CPUWeight=30
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/opt/genre-classifier
+
+[Install]
+WantedBy=multi-user.target

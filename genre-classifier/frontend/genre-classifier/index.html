@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#000000" />
+<meta name="description" content="A custom-trained song-genre classifier, self-hosted on bradjobe.dev." />
+<title>Genre Classifier — bradjobe.dev</title>
+<link rel="shortcut icon" href="/favicon.ico" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <a class="back" href="/">&larr; bradjobe.dev</a>
+      <h1>Song genre classifier</h1>
+      <p class="subtitle">
+        A small model I trained from scratch on ~38k Spotify tracks &mdash;
+        predicting genre from the <strong>title text alone</strong> (no
+        audio features). Self-hosted on the same VPS as the LLM demo.
+      </p>
+      <button class="details-toggle" id="detailsToggle" aria-expanded="false" aria-controls="details">
+        How this is built <span class="chev">&#9662;</span>
+      </button>
+      <div class="details" id="details" hidden>
+        <dl>
+          <dt>Task</dt>
+          <dd>11-class genre classification from song title text only &mdash; a deliberately weak-signal problem (titles rarely encode genre)</dd>
+          <dt>Data</dt>
+          <dd>Spotify Tracks Dataset (114k rows, 114 raw tags), collapsed into 11 broad genres and deduplicated to remove cross-genre label noise &rarr; ~38k clean examples</dd>
+          <dt>Models compared</dt>
+          <dd>A from-scratch PyTorch embedding+MLP classifier vs. TF-IDF (char n-grams) + Logistic Regression</dd>
+          <dt>Result</dt>
+          <dd>The classical model won: <strong>41% test accuracy</strong> / 0.38 macro-F1, vs 36% for the neural net &mdash; and vs a 12% majority-class baseline. Shipped the simpler, better, cheaper model.</dd>
+          <dt>Serving</dt>
+          <dd>Flask + waitress (WSGI), systemd-managed, memory-capped, loopback-only, behind nginx with rate limiting</dd>
+        </dl>
+      </div>
+    </header>
+
+    <main class="card">
+      <form class="composer" id="composer">
+        <input
+          id="input"
+          type="text"
+          placeholder="Type a song title… e.g. Bohemian Rhapsody"
+          maxlength="200"
+          autocomplete="off"
+        />
+        <button type="submit" id="sendBtn">Classify</button>
+      </form>
+      <div class="statusline" id="statusline">&nbsp;</div>
+      <div id="result" class="result" hidden>
+        <div class="top-pick">
+          <span class="top-genre" id="topGenre"></span>
+          <span class="top-conf" id="topConf"></span>
+        </div>
+        <div class="bars" id="bars"></div>
+      </div>
+    </main>
+
+    <footer class="foot">
+      <span>Trained on song metadata only — no audio, no lyrics. Expect it to be wrong often; that's the honest result of this task.</span>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

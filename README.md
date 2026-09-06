@@ -1,11 +1,27 @@
-# llm-testing — self-hosted LLM demo on bradjobe.dev
+# ML infra demos on bradjobe.dev
+
+Two self-hosted ML demos, both running on the same 1 vCPU / 2GB Linode VPS
+that serves bradjobe.dev, both built as production-infra portfolio pieces
+rather than API-key-and-a-widget demos:
+
+- **`/llm-testing`** (this top-level README) — serving an existing
+  open-weights LLM: model serving, reliability, observability, guardrails.
+- **[`/genre-classifier`](genre-classifier/README.md)** — training a model
+  from scratch: data cleaning, evaluating a neural net against a classical
+  baseline, and shipping the one that actually won.
+
+They share nginx, the Basic Auth credentials, and the "each service gets
+its own systemd unit + own port + memory cap" pattern — see
+`genre-classifier/README.md` for the second one.
+
+---
+
+## llm-testing
 
 Live at: https://bradjobe.dev/llm-testing/
 
-A small, self-hosted chat demo running entirely on the same 1 vCPU / 2GB
-Linode VPS that serves bradjobe.dev — built as a production-infra portfolio
-piece (model serving, reliability, observability, guardrails), not just a
-chat widget wired to a hosted API.
+A small, self-hosted chat demo — model serving, reliability, observability,
+guardrails — not just a chat widget wired to a hosted API.
 
 ## Architecture
 

@@ -1,0 +1,34 @@
+FINAL MODEL: test_acc=0.4091 test_macro_f1=0.3761
+
+                      precision    recall  f1-score   support
+
+        Country/Folk      0.362     0.412     0.385       466
+          Electronic      0.367     0.350     0.359       420
+             Hip-Hop      0.061     0.204     0.094        49
+Jazz/Blues/Classical      0.575     0.520     0.546       244
+               Latin      0.536     0.639     0.583       449
+               Metal      0.371     0.349     0.360       455
+                 Pop      0.589     0.570     0.579       449
+            R&B/Soul      0.372     0.361     0.367       255
+              Reggae      0.175     0.292     0.219       161
+                Rock      0.255     0.149     0.188       417
+               World      0.527     0.404     0.457       463
+
+            accuracy                          0.409      3828
+           macro avg      0.381     0.386     0.376      3828
+        weighted avg      0.421     0.409     0.411      3828
+
+confusion matrix labels: ['Country/Folk', 'Electronic', 'Hip-Hop', 'Jazz/Blues/Classical', 'Latin', 'Metal', 'Pop', 'R&B/Soul', 'Reggae', 'Rock', 'World']
+[[192  48  27  20   6  42  35  14  19  45  18]
+ [ 67 147  18  13   8  53  27  10  32  21  24]
+ [  5   7  10   0   0   5   9   1   8   1   3]
+ [ 35   7   5 127  16  10   7   7  13  10   7]
+ [  5   8   2   2 287  22   5  61  31  15  11]
+ [ 53  48  19  12  43 159  18  13  31  38  21]
+ [ 34  27  28   6   2  16 256   4   9  20  47]
+ [ 20  24   5  10  58  16   7  92   8  10   5]
+ [ 14  15   2   2  43  15   3   5  47   8   7]
+ [ 63  45  22  16  53  46  27  16  42  62  25]
+ [ 43  24  25  13  19  45  41  24  29  13 187]]
+
+majority-class baseline ('World'): test_acc=0.1210
