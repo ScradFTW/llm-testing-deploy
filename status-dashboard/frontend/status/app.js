@@ -82,10 +82,32 @@
       .join("");
   }
 
+  function renderImageBars(counts) {
+    const el = document.getElementById("imageBars");
+    if (!el) return;
+    const entries = Object.entries(counts || {}).sort((a, b) => b[1] - a[1]);
+    if (entries.length === 0) {
+      el.innerHTML = '<p class="bars-empty">No predictions yet — try /image-classifier.</p>';
+      return;
+    }
+    const max = entries[0][1];
+    el.innerHTML = entries
+      .map(
+        ([label, count]) => `
+        <div class="bar-row">
+          <div class="bar-label">${label}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.max(4, (count / max) * 100)}%"></div></div>
+          <div class="bar-count">${count}</div>
+        </div>`
+      )
+      .join("");
+  }
+
   async function refresh() {
-    const [agentRes, genreRes] = await Promise.all([
+    const [agentRes, genreRes, imageRes] = await Promise.all([
       fetchJson("/status/api/agent-stats"),
       fetchJson("/status/api/genre-stats"),
+      fetchJson("/status/api/image-stats"),
     ]);
 
     const tiles = [];
@@ -108,6 +130,14 @@
       renderGenreBars(g.genre_counts);
     } else {
       tiles.push(tile("genre-classifier", "down", genreRes.status ? `HTTP ${genreRes.status}` : "unreachable", "critical"));
+    }
+
+    if (imageRes.ok) {
+      const im = imageRes.data;
+      tiles.push(tile("image-classifier", im.requests_total, `p50 ${fmtMs(im.latency_ms.p50)} · p95 ${fmtMs(im.latency_ms.p95)}`, "good"));
+      renderImageBars(im.class_counts);
+    } else {
+      tiles.push(tile("image-classifier", "down", imageRes.status ? `HTTP ${imageRes.status}` : "unreachable", "critical"));
     }
 
     // llama-server has no HTTP /stats of its own (kept minimal on purpose —

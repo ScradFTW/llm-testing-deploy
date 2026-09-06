@@ -1,21 +1,25 @@
 # ML infra demos on bradjobe.dev
 
-Four self-hosted pieces, all running on the same 1 vCPU / 2GB Linode VPS
+Five self-hosted pieces, all running on the same 1 vCPU / 2GB Linode VPS
 that serves bradjobe.dev, built as production-infra portfolio pieces rather
 than API-key-and-a-widget demos. **Start at
 [bradjobe.dev/ai](https://bradjobe.dev/ai/)** — it's the interviewer-facing
-overview that ties all four together with an explicit map to the job this
+overview that ties all five together with an explicit map to the job this
 was built for.
 
 - **`/llm-testing`** (this top-level README) — serving an existing
   open-weights LLM: model serving, reliability, observability, guardrails.
-- **[`/genre-classifier`](genre-classifier/README.md)** — training a model
-  from scratch: data cleaning, evaluating a neural net against a classical
-  baseline, and shipping the one that actually won.
+- **[`/genre-classifier`](genre-classifier/README.md)** — training a text
+  model from scratch: data cleaning, evaluating a neural net against a
+  classical baseline, and shipping the one that actually won.
+- **[`/image-classifier`](image-classifier/README.md)** — training a
+  computer-vision model from scratch: a CNN trained on GPU, exported to
+  ONNX, and served on CPU only — the non-text half of the project.
 - **[`/agent-demo`](agent-orchestrator/README.md)** — a reasoning agent that
-  ties the two above together: the LLM can call the classifier as a tool,
-  gated by a deterministic guardrail because the LLM's own judgment about
-  *when* to call it turned out not to be trustworthy (measured, not assumed).
+  ties the LLM and the text classifier together: the LLM can call the
+  classifier as a tool, gated by a deterministic guardrail because the
+  LLM's own judgment about *when* to call it turned out not to be
+  trustworthy (measured, not assumed).
 - **[`/status`](status-dashboard/README.md)** — live telemetry polled
   straight from each service's own in-process metrics.
 

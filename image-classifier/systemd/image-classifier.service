@@ -1,0 +1,25 @@
+[Unit]
+Description=Image classifier (CNN trained on CIFAR-10, ONNX Runtime) for bradjobe.dev/image-classifier
+After=network.target
+
+[Service]
+Type=simple
+User=vision
+Group=vision
+WorkingDirectory=/opt/image-classifier
+ExecStart=/opt/image-classifier/venv/bin/waitress-serve --host=127.0.0.1 --port=8085 --threads=2 app:app
+Restart=always
+RestartSec=2
+
+MemoryMax=400M
+MemoryHigh=300M
+CPUWeight=30
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/opt/image-classifier
+
+[Install]
+WantedBy=multi-user.target

@@ -17,11 +17,12 @@
         <a href="/ai/">Overview</a> ·
         <a href="/llm-testing/">LLM serving</a> ·
         <a href="/genre-classifier/">Classifier</a> ·
+        <a href="/image-classifier/">Vision</a> ·
         <a href="/agent-demo/">Agent</a>
       </nav>
       <h1>Live telemetry</h1>
       <p class="subtitle">
-        Real metrics from the three services below, polled every 5s directly
+        Real metrics from the services below, polled every 5s directly
         from each service's own <code>/stats</code> endpoint &mdash; no
         Prometheus/Grafana at this scale, but the same idea: counters and
         latency percentiles collected in-process and exposed for scraping
@@ -43,6 +44,12 @@
         judgment isn't trusted.
       </p>
       <div id="precisionTile" class="precision-tile">&mdash;</div>
+    </section>
+
+    <section class="card">
+      <h2>Image classifier — prediction distribution</h2>
+      <p class="explain">Live counts of predicted CIFAR-10 classes this process has served since its last restart.</p>
+      <div id="imageBars" class="bars"></div>
     </section>
 
     <section class="card">

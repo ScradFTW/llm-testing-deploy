@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#000000" />
+<meta name="description" content="A CNN trained from scratch and exported to ONNX, self-hosted on bradjobe.dev." />
+<title>Image Classifier — bradjobe.dev</title>
+<link rel="shortcut icon" href="/favicon.ico" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <a class="back" href="/">&larr; bradjobe.dev</a>
+      <nav class="demonav">
+        <a href="/ai/">Overview</a> ·
+        <a href="/llm-testing/">LLM serving</a> ·
+        <a href="/genre-classifier/">Text classifier</a> ·
+        <a href="/agent-demo/">Agent</a> ·
+        <a href="/status/">Telemetry</a>
+      </nav>
+      <h1>Image classifier</h1>
+      <p class="subtitle">
+        A small convolutional network, trained from scratch on CIFAR-10,
+        exported to ONNX and served with ONNX Runtime &mdash; no PyTorch on
+        this box at all. The computer-vision counterpart to the text
+        classifier next door.
+      </p>
+      <button class="details-toggle" id="detailsToggle" aria-expanded="false" aria-controls="details">
+        How this is built <span class="chev">&#9662;</span>
+      </button>
+      <div class="details" id="details" hidden>
+        <dl>
+          <dt>Task</dt>
+          <dd>10-class image classification (CIFAR-10: airplane, automobile, bird, cat, deer, dog, frog, horse, ship, truck), 32×32 RGB input</dd>
+          <dt>Model</dt>
+          <dd>A small custom CNN (3 conv blocks + 2 FC layers, ~1M params), trained from scratch for 15 epochs with data augmentation</dd>
+          <dt>Result</dt>
+          <dd><strong>80.6% test accuracy</strong> vs. a 10% majority-class baseline (full per-class report + confusion matrix in the repo)</dd>
+          <dt>Train vs. serve split</dt>
+          <dd>Trained with PyTorch on a GPU (workstation, not this VPS), then exported to ONNX and verified to produce byte-identical predictions before deploying &mdash; this box runs ONNX Runtime only, ~50MB memory, no GPU and no PyTorch needed for inference</dd>
+          <dt>Out-of-distribution behavior</dt>
+          <dd>Upload something that isn't one of the 10 classes (a face, a landscape) and watch the confidence scores &mdash; it doesn't confidently misclassify, the top score usually drops well below 50%</dd>
+        </dl>
+      </div>
+    </header>
+
+    <main class="card">
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="fileInput" accept="image/*" hidden />
+        <div class="dz-content">
+          <div class="dz-icon">📷</div>
+          <div>Drop an image here, or <button type="button" id="browseBtn" class="linklike">choose a file</button></div>
+          <div class="dz-hint">Best results on the 10 CIFAR classes above — but try anything.</div>
+        </div>
+        <img id="preview" hidden />
+      </div>
+      <div class="statusline" id="statusline">&nbsp;</div>
+      <div id="result" class="result" hidden>
+        <div class="top-pick">
+          <span class="top-genre" id="topLabel"></span>
+          <span class="top-conf" id="topConf"></span>
+        </div>
+        <div class="bars" id="bars"></div>
+      </div>
+    </main>
+
+    <footer class="foot">
+      <span>Images are classified in-memory and not stored. Rate-limited like the other demos.</span>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

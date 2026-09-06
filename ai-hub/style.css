@@ -91,6 +91,7 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); }
 .box.edge { border-color: var(--accent-dim); }
 .box.svc.llm { border-color: #6ea8ff55; }
 .box.svc.genre { border-color: #9fc46a55; }
+.box.svc.image { border-color: #c58ae655; }
 .box.svc.agent { border-color: #d3a15a55; }
 .box.telemetry { border-color: var(--accent-dim); margin-top: 4px; }
 

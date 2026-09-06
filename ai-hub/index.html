@@ -15,18 +15,20 @@
       <a class="back" href="/">&larr; bradjobe.dev</a>
       <h1>Self-hosted ML infrastructure</h1>
       <p class="subtitle">
-        Three small, real, running systems on a single $5/mo 1-vCPU / 2GB
-        VPS — built to demonstrate the production side of ML/LLM work:
-        serving, evaluation, guardrails, and observability. Written for
-        anyone reviewing this as part of an interview.
+        Five small, real, running systems on a single $5/mo 1-vCPU / 2GB
+        VPS — built to demonstrate the production side of ML/LLM/CV work:
+        serving, evaluation, guardrails, and observability, across both
+        text and vision. Written for anyone reviewing this as part of an
+        interview.
       </p>
     </header>
 
     <nav class="demolinks">
       <a href="/llm-testing/"><span class="n">01</span> LLM serving <span class="arr">&rarr;</span></a>
-      <a href="/genre-classifier/"><span class="n">02</span> Trained classifier <span class="arr">&rarr;</span></a>
-      <a href="/agent-demo/"><span class="n">03</span> Reasoning agent <span class="arr">&rarr;</span></a>
-      <a href="/status/"><span class="n">04</span> Live telemetry <span class="arr">&rarr;</span></a>
+      <a href="/genre-classifier/"><span class="n">02</span> Trained text classifier <span class="arr">&rarr;</span></a>
+      <a href="/image-classifier/"><span class="n">03</span> Trained vision classifier <span class="arr">&rarr;</span></a>
+      <a href="/agent-demo/"><span class="n">04</span> Reasoning agent <span class="arr">&rarr;</span></a>
+      <a href="/status/"><span class="n">05</span> Live telemetry <span class="arr">&rarr;</span></a>
     </nav>
 
     <section class="card">
@@ -47,12 +49,16 @@
             <div class="box svc genre">genre-classifier<br /><span class="sub">Flask+waitress · systemd</span></div>
           </div>
           <div class="branch">
+            <div class="arrow-down">/image-classifier/api</div>
+            <div class="box svc image">image-classifier<br /><span class="sub">ONNX Runtime · systemd</span></div>
+          </div>
+          <div class="branch">
             <div class="arrow-down">/agent-demo/api</div>
             <div class="box svc agent">agent-orchestrator<br /><span class="sub">Flask+waitress · systemd</span></div>
           </div>
         </div>
         <div class="arrow-cross">
-          <span>agent-orchestrator calls both llama-server <em>and</em> genre-classifier over loopback — it's the only service that talks to the other two</span>
+          <span>agent-orchestrator calls both llama-server <em>and</em> genre-classifier over loopback — it does not yet call image-classifier (see "Honest gaps")</span>
         </div>
         <div class="col">
           <div class="box telemetry">/status dashboard<br /><span class="sub">polls each service's own /stats</span></div>
@@ -63,9 +69,9 @@
         binds to <code>127.0.0.1</code> only (never reachable except through
         nginx), has a hard <code>MemoryMax</code>, and is sandboxed
         (<code>ProtectSystem=strict</code>, <code>NoNewPrivileges</code>).
-        Same pattern repeated three times rather than three different
-        one-off setups — the kind of consistency that matters once there's
-        more than one service to operate.
+        Same pattern repeated across every service rather than one-off
+        setups — the kind of consistency that matters once there's more
+        than one service to operate.
       </p>
     </section>
 
@@ -80,7 +86,11 @@
           </tr>
           <tr>
             <td>Build validation/evaluation pipelines</td>
-            <td><a href="/genre-classifier/">Trained classifier</a>: two models benchmarked head-to-head on a held-out test set (accuracy, macro-F1, confusion matrix, majority-class baseline) before choosing what to ship</td>
+            <td><a href="/genre-classifier/">Trained text classifier</a>: two models benchmarked head-to-head on a held-out test set (accuracy, macro-F1, confusion matrix, majority-class baseline) before choosing what to ship</td>
+          </tr>
+          <tr>
+            <td>Computer vision / multi-modal model development</td>
+            <td><a href="/image-classifier/">Trained vision classifier</a>: a CNN trained from scratch (80.6% test accuracy vs. 10% baseline), trained on GPU and exported to ONNX for CPU-only production serving — verified byte-identical predictions before deploying. A second modality alongside the text pipeline, not just more text.</td>
           </tr>
           <tr>
             <td>Validate quality in the long tail; catch exceptions early</td>
@@ -124,9 +134,10 @@
       </p>
       <ul class="gaps">
         <li><strong>No cloud platform (AWS/GCP) or IaC</strong> — this is a single Linode VPS configured directly; no Terraform, no infra-as-code. At scale this would be Terraform-managed, likely across environments.</li>
-        <li><strong>No containers/orchestration</strong> — each service is a systemd unit on bare metal, not Docker/Kubernetes. Right-sized for three services on one box; wrong choice past that.</li>
-        <li><strong>No CI/CD</strong> — deploys are manual (documented in the repo). A real pipeline would run the classifier's eval suite as a gate before any deploy.</li>
-        <li><strong>No GPU serving</strong> — everything here is CPU inference by necessity. Latency-sensitive, larger-scale serving would need GPU fleets, batching, and a real inference server (vLLM/TensorRT-LLM).</li>
+        <li><strong>No containers/orchestration</strong> — each service is a systemd unit on bare metal, not Docker/Kubernetes. Right-sized for five services on one box; wrong choice past that.</li>
+        <li><strong>No CI/CD</strong> — deploys are manual (documented in the repo). A real pipeline would run each model's eval suite as a gate before any deploy.</li>
+        <li><strong>No GPU serving</strong> — the vision model was trained on GPU, but both models serve on CPU only, by necessity of the VPS hardware. Latency-sensitive, larger-scale serving would need GPU fleets, batching, and a real inference server (vLLM/TensorRT-LLM).</li>
+        <li><strong>Not a true multi-modal model</strong> — the text and vision classifiers are two separate models behind separate tools, not one model reasoning jointly over both modalities (a real VLM). The agent also doesn't call the vision tool yet — extending it to accept an image is the natural next step, not yet done.</li>
         <li><strong>No agent framework</strong> (LangGraph/Temporal/etc.) — one tool and one decision point doesn't need one; multi-tool, multi-step agents would.</li>
       </ul>
       <p class="explain">
