@@ -1,0 +1,35 @@
+[Unit]
+Description=llama.cpp server (Qwen2.5-0.5B-Instruct) for bradjobe.dev/llm-testing
+After=network.target
+
+[Service]
+Type=simple
+User=llm
+Group=llm
+Environment=LD_LIBRARY_PATH=/opt/llm/llama.cpp/llama-b10819
+ExecStart=/opt/llm/llama.cpp/llama-b10819/llama-server \
+    -m /opt/llm/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
+    --host 127.0.0.1 \
+    --port 8080 \
+    -c 2048 \
+    --parallel 1 \
+    -ngl 0 \
+    --no-webui
+Restart=always
+RestartSec=2
+
+# Resource limits: this box also serves other sites, so a runaway
+# model process must never be able to OOM the whole VPS.
+MemoryMax=1200M
+MemoryHigh=1000M
+CPUWeight=50
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/opt/llm
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#000000" />
+<meta name="description" content="A small self-hosted LLM demo running on a single-core VPS, by Brad Jobe." />
+<title>LLM Testing — bradjobe.dev</title>
+<link rel="shortcut icon" href="/favicon.ico" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <a class="back" href="/">&larr; bradjobe.dev</a>
+      <h1>Self-hosted LLM demo</h1>
+      <p class="subtitle">
+        A small language model, running entirely on this site's own
+        1-vCPU / 2GB VPS &mdash; no external API calls.
+      </p>
+      <button class="details-toggle" id="detailsToggle" aria-expanded="false" aria-controls="details">
+        How this is built <span class="chev">&#9662;</span>
+      </button>
+      <div class="details" id="details" hidden>
+        <dl>
+          <dt>Model</dt>
+          <dd>Qwen2.5-0.5B-Instruct, quantized to Q4_K_M GGUF (~470MB)</dd>
+          <dt>Serving</dt>
+          <dd>llama.cpp's <code>llama-server</code>, OpenAI-compatible API, bound to loopback only</dd>
+          <dt>Process management</dt>
+          <dd>systemd unit &mdash; auto-restart, memory-capped so it can't affect other sites on this box</dd>
+          <dt>Edge</dt>
+          <dd>nginx reverse proxy over the site's existing TLS cert, with per-IP rate limiting and request-size caps</dd>
+          <dt>Hardware</dt>
+          <dd>1 shared vCPU, 2GB RAM &mdash; generation runs on CPU only, so replies are short and can take a few seconds</dd>
+        </dl>
+      </div>
+    </header>
+
+    <main class="chat-card">
+      <div class="messages" id="messages" aria-live="polite">
+        <div class="msg msg-assistant">
+          <div class="bubble">Hi! I'm a tiny model running on a single CPU core. Ask me something short.</div>
+        </div>
+      </div>
+
+      <form class="composer" id="composer">
+        <textarea
+          id="input"
+          placeholder="Message the model…"
+          maxlength="500"
+          rows="1"
+          autocomplete="off"
+        ></textarea>
+        <button type="submit" id="sendBtn">Send</button>
+      </form>
+      <div class="statusline" id="statusline">&nbsp;</div>
+    </main>
+
+    <footer class="foot">
+      <span>Rate-limited to a few requests per minute per visitor &mdash; it's one CPU core doing its best.</span>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
