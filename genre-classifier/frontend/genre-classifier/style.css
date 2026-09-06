@@ -141,3 +141,7 @@ html, body {
   padding: 10px 14px;
   font-size: 0.9rem;
 }
+
+.demonav { font-size: 0.78rem; color: var(--muted); margin: 2px 0 0; }
+.demonav a { color: var(--muted); text-decoration: none; }
+.demonav a:hover { color: var(--accent); }

@@ -1,0 +1,25 @@
+[Unit]
+Description=Agent orchestrator (tool-use over llama-server + genre-classifier) for bradjobe.dev/agent-demo
+After=network.target llama-server.service genre-classifier.service
+
+[Service]
+Type=simple
+User=agent
+Group=agent
+WorkingDirectory=/opt/agent-orchestrator
+ExecStart=/opt/agent-orchestrator/venv/bin/waitress-serve --host=127.0.0.1 --port=8084 --threads=4 app:app
+Restart=always
+RestartSec=2
+
+MemoryMax=300M
+MemoryHigh=200M
+CPUWeight=30
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/opt/agent-orchestrator
+
+[Install]
+WantedBy=multi-user.target

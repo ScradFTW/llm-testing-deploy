@@ -1,0 +1,146 @@
+:root {
+  color-scheme: dark;
+  --bg: #0a0a0b;
+  --panel: #17171a;
+  --panel-2: #1f1f23;
+  --border: #2a2a30;
+  --text: #e8e8ea;
+  --muted: #93939c;
+  --accent: #6ea8ff;
+  --accent-dim: #3a5a8f;
+  --danger: #ff6e6e;
+  --radius: 12px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); }
+
+.page {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 32px 16px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.hero { display: flex; flex-direction: column; gap: 8px; }
+.back { color: var(--muted); text-decoration: none; font-size: 0.85rem; width: fit-content; }
+.back:hover { color: var(--text); }
+.hero h1 { margin: 4px 0 0; font-size: 1.7rem; }
+.subtitle { margin: 0; color: var(--muted); line-height: 1.55; font-size: 0.95rem; max-width: 640px; }
+
+.demolinks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+.demolinks a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: border-color 0.15s ease;
+}
+.demolinks a:hover { border-color: var(--accent-dim); }
+.demolinks .n { color: var(--accent); font-size: 0.75rem; font-weight: 700; }
+.demolinks .arr { margin-left: auto; color: var(--muted); }
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.card h2 { margin: 0; font-size: 1.1rem; }
+.explain { margin: 0; font-size: 0.88rem; color: var(--muted); line-height: 1.6; }
+.explain a, table.map a { color: var(--accent); }
+.explain code { background: var(--panel-2); padding: 1px 5px; border-radius: 4px; font-size: 0.85em; }
+
+/* --- diagram --- */
+.diagram {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 0 4px;
+}
+.col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.box {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 18px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: var(--panel-2);
+}
+.box .sub { display: block; font-weight: 400; color: var(--muted); font-size: 0.72rem; margin-top: 2px; }
+.box.user { background: transparent; border-style: dashed; }
+.box.edge { border-color: var(--accent-dim); }
+.box.svc.llm { border-color: #6ea8ff55; }
+.box.svc.genre { border-color: #9fc46a55; }
+.box.svc.agent { border-color: #d3a15a55; }
+.box.telemetry { border-color: var(--accent-dim); margin-top: 4px; }
+
+.arrow-down {
+  font-size: 0.68rem;
+  color: var(--muted);
+  position: relative;
+  padding: 10px 0 4px;
+}
+.arrow-down::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 100%;
+  background: var(--border);
+}
+
+.fanout {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+}
+.branch { display: flex; flex-direction: column; align-items: center; }
+
+.arrow-cross {
+  max-width: 480px;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--muted);
+  padding: 10px 12px;
+  border-top: 1px dashed var(--border);
+  border-bottom: 1px dashed var(--border);
+  margin: 6px 0;
+}
+.arrow-cross em { color: var(--text); font-style: normal; }
+
+table.map { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+table.map th { text-align: left; color: var(--muted); font-weight: 500; font-size: 0.78rem; padding: 6px 10px 8px 0; border-bottom: 1px solid var(--border); }
+table.map td { padding: 10px 10px 10px 0; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.5; }
+table.map tr:last-child td { border-bottom: none; }
+table.map td:first-child { font-weight: 600; white-space: nowrap; padding-right: 18px; }
+
+ul.gaps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+ul.gaps li { font-size: 0.88rem; color: var(--muted); line-height: 1.55; }
+ul.gaps li strong { color: var(--text); }
+
+.built-with { border-color: var(--accent-dim); }
+
+.foot { text-align: center; color: var(--muted); font-size: 0.8rem; }

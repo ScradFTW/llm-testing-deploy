@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#000000" />
+<meta name="description" content="Self-hosted ML infrastructure demos and engineering notes, by Brad Jobe." />
+<title>AI Infrastructure Notes — bradjobe.dev</title>
+<link rel="shortcut icon" href="/favicon.ico" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <a class="back" href="/">&larr; bradjobe.dev</a>
+      <h1>Self-hosted ML infrastructure</h1>
+      <p class="subtitle">
+        Three small, real, running systems on a single $5/mo 1-vCPU / 2GB
+        VPS — built to demonstrate the production side of ML/LLM work:
+        serving, evaluation, guardrails, and observability. Written for
+        anyone reviewing this as part of an interview.
+      </p>
+    </header>
+
+    <nav class="demolinks">
+      <a href="/llm-testing/"><span class="n">01</span> LLM serving <span class="arr">&rarr;</span></a>
+      <a href="/genre-classifier/"><span class="n">02</span> Trained classifier <span class="arr">&rarr;</span></a>
+      <a href="/agent-demo/"><span class="n">03</span> Reasoning agent <span class="arr">&rarr;</span></a>
+      <a href="/status/"><span class="n">04</span> Live telemetry <span class="arr">&rarr;</span></a>
+    </nav>
+
+    <section class="card">
+      <h2>System diagram</h2>
+      <div class="diagram">
+        <div class="col">
+          <div class="box user">Browser<br /><span class="sub">you</span></div>
+          <div class="arrow-down">HTTPS + Basic Auth</div>
+          <div class="box edge">nginx<br /><span class="sub">TLS · rate limits · auth</span></div>
+        </div>
+        <div class="fanout">
+          <div class="branch">
+            <div class="arrow-down">/llm-testing/api</div>
+            <div class="box svc llm">llama-server<br /><span class="sub">Qwen2.5-0.5B · systemd</span></div>
+          </div>
+          <div class="branch">
+            <div class="arrow-down">/genre-classifier/api</div>
+            <div class="box svc genre">genre-classifier<br /><span class="sub">Flask+waitress · systemd</span></div>
+          </div>
+          <div class="branch">
+            <div class="arrow-down">/agent-demo/api</div>
+            <div class="box svc agent">agent-orchestrator<br /><span class="sub">Flask+waitress · systemd</span></div>
+          </div>
+        </div>
+        <div class="arrow-cross">
+          <span>agent-orchestrator calls both llama-server <em>and</em> genre-classifier over loopback — it's the only service that talks to the other two</span>
+        </div>
+        <div class="col">
+          <div class="box telemetry">/status dashboard<br /><span class="sub">polls each service's own /stats</span></div>
+        </div>
+      </div>
+      <p class="explain">
+        Every backend service: runs as its own unprivileged systemd user,
+        binds to <code>127.0.0.1</code> only (never reachable except through
+        nginx), has a hard <code>MemoryMax</code>, and is sandboxed
+        (<code>ProtectSystem=strict</code>, <code>NoNewPrivileges</code>).
+        Same pattern repeated three times rather than three different
+        one-off setups — the kind of consistency that matters once there's
+        more than one service to operate.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>What each piece demonstrates</h2>
+      <table class="map">
+        <thead><tr><th>Job requirement</th><th>Where it shows up here</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Deploy/operate model serving in production</td>
+            <td><a href="/llm-testing/">LLM serving</a>: OpenAI-compatible API via llama.cpp, systemd-managed (auto-restart, memory-capped), streaming, loopback-only + reverse proxy</td>
+          </tr>
+          <tr>
+            <td>Build validation/evaluation pipelines</td>
+            <td><a href="/genre-classifier/">Trained classifier</a>: two models benchmarked head-to-head on a held-out test set (accuracy, macro-F1, confusion matrix, majority-class baseline) before choosing what to ship</td>
+          </tr>
+          <tr>
+            <td>Validate quality in the long tail; catch exceptions early</td>
+            <td><a href="/agent-demo/">Reasoning agent</a>'s guardrail layer: empirically found the LLM proposes its one tool for irrelevant messages (and once hallucinated a tool that doesn't exist) — a deterministic check gates execution instead of trusting the model's own judgment</td>
+          </tr>
+          <tr>
+            <td>Reasoning agent infrastructure: orchestration, tool execution, guardrails</td>
+            <td><a href="/agent-demo/">Reasoning agent</a>: a small orchestrator service between the LLM and the classifier tool, with explicit propose → guard → execute → re-ground stages, all traced</td>
+          </tr>
+          <tr>
+            <td>Telemetry, observability, dashboards</td>
+            <td><a href="/status/">Live telemetry</a>: real in-process counters and latency percentiles per service, an event log of every agent decision, polled live — not a mockup</td>
+          </tr>
+          <tr>
+            <td>Reliability, performance, cost efficiency</td>
+            <td>Model size and architecture chosen for the hardware, not the other way around: 0.5B LLM sized for 1 shared vCPU; classical TF-IDF+LogReg picked over a neural net after it won on accuracy <em>and</em> cost; nginx rate limiting protects the single core from being monopolized</td>
+          </tr>
+          <tr>
+            <td>Evangelize effective practices</td>
+            <td>Shipping the simpler model after a fair comparison, instead of defaulting to deep learning — see the honest writeup on <a href="/genre-classifier/">/genre-classifier</a></td>
+          </tr>
+          <tr>
+            <td>Security controls, operational safeguards</td>
+            <td>HTTP Basic Auth at the edge, TLS throughout, every backend loopback-only, systemd sandboxing per service, request-size and rate limits</td>
+          </tr>
+          <tr>
+            <td>AI-assisted development workflows</td>
+            <td>This entire project — infra, training code, this page — was built working with Claude Code, iteratively, including catching and fixing real bugs it introduced (see "Built with" below)</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>Honest gaps</h2>
+      <p class="explain">
+        This runs on one $5/mo VPS, not a cloud platform, on purpose — the
+        point was to demonstrate engineering judgment under a real, tight
+        constraint, not to simulate a fleet. That means some things a
+        production system at scale would have are deliberately not here:
+      </p>
+      <ul class="gaps">
+        <li><strong>No cloud platform (AWS/GCP) or IaC</strong> — this is a single Linode VPS configured directly; no Terraform, no infra-as-code. At scale this would be Terraform-managed, likely across environments.</li>
+        <li><strong>No containers/orchestration</strong> — each service is a systemd unit on bare metal, not Docker/Kubernetes. Right-sized for three services on one box; wrong choice past that.</li>
+        <li><strong>No CI/CD</strong> — deploys are manual (documented in the repo). A real pipeline would run the classifier's eval suite as a gate before any deploy.</li>
+        <li><strong>No GPU serving</strong> — everything here is CPU inference by necessity. Latency-sensitive, larger-scale serving would need GPU fleets, batching, and a real inference server (vLLM/TensorRT-LLM).</li>
+        <li><strong>No agent framework</strong> (LangGraph/Temporal/etc.) — one tool and one decision point doesn't need one; multi-tool, multi-step agents would.</li>
+      </ul>
+      <p class="explain">
+        None of this is hidden — it's the same list in the project's README,
+        and happy to go deeper on any of it.
+      </p>
+    </section>
+
+    <section class="card built-with">
+      <h2>Built with Claude Code</h2>
+      <p class="explain">
+        Every part of this — the systemd units, nginx config, model
+        training and evaluation scripts, the orchestrator, this page — was
+        built in collaboration with Claude Code. That included it making
+        real mistakes worth mentioning rather than hiding: a font-stack bug
+        that made an entire page's text invisible, a port collision with an
+        unrelated project on the same box, and a naive first version of the
+        tool-calling guardrail that had to be corrected after testing
+        showed the model hallucinating tool calls. Reviewing, testing, and
+        catching that — not just accepting generated output — was part of
+        the exercise.
+      </p>
+    </section>
+
+    <footer class="foot">
+      <span>Questions about any piece of this are welcome — that's the point of writing it down.</span>
+    </footer>
+  </div>
+</body>
+</html>

@@ -211,6 +211,28 @@ html, body {
   font-size: 0.78rem;
 }
 
+.subtitle a { color: var(--accent); }
+
+.trace {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  border-top: 1px dashed var(--border);
+  padding-top: 6px;
+}
+.trace .tag {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-right: 6px;
+}
+.trace .tag.executed { background: rgba(110, 168, 255, 0.18); color: var(--accent); }
+.trace .tag.blocked { background: rgba(255, 180, 80, 0.15); color: #ffb450; }
+.trace .tag.malformed { background: rgba(255, 110, 110, 0.15); color: var(--danger); }
+.trace .tag.none { background: var(--panel-2); color: var(--muted); }
+
 @media (prefers-color-scheme: light) {
   /* This page intentionally commits to a single dark look. */
 }

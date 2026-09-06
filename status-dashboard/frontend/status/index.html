@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#000000" />
+<meta name="description" content="Live telemetry for the self-hosted ML demos on bradjobe.dev." />
+<title>Status — bradjobe.dev</title>
+<link rel="shortcut icon" href="/favicon.ico" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <a class="back" href="/">&larr; bradjobe.dev</a>
+      <nav class="demonav">
+        <a href="/ai/">Overview</a> ·
+        <a href="/llm-testing/">LLM serving</a> ·
+        <a href="/genre-classifier/">Classifier</a> ·
+        <a href="/agent-demo/">Agent</a>
+      </nav>
+      <h1>Live telemetry</h1>
+      <p class="subtitle">
+        Real metrics from the three services below, polled every 5s directly
+        from each service's own <code>/stats</code> endpoint &mdash; no
+        Prometheus/Grafana at this scale, but the same idea: counters and
+        latency percentiles collected in-process and exposed for scraping
+        (each also has a <code>/metrics</code> endpoint in Prometheus text
+        format).
+      </p>
+    </header>
+
+    <section class="grid" id="serviceGrid"></section>
+
+    <section class="card">
+      <h2>Agent tool-trigger precision</h2>
+      <p class="explain">
+        Of all times the LLM <em>proposed</em> calling the genre-classifier
+        tool (including hallucinated/malformed attempts), the share where
+        the deterministic guardrail actually let it through. Low precision
+        here is expected and honestly reported &mdash; see
+        <a href="/agent-demo/">/agent-demo</a> for why the model's own
+        judgment isn't trusted.
+      </p>
+      <div id="precisionTile" class="precision-tile">&mdash;</div>
+    </section>
+
+    <section class="card">
+      <h2>Genre classifier — prediction distribution</h2>
+      <p class="explain">Live counts of predicted genres this process has served since its last restart.</p>
+      <div id="genreBars" class="bars"></div>
+    </section>
+
+    <section class="card">
+      <h2>Recent agent events</h2>
+      <p class="explain">Last requests to the agent orchestrator, most recent first.</p>
+      <div id="eventsTable"></div>
+    </section>
+
+    <footer class="foot">
+      <span id="lastUpdated">loading…</span>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

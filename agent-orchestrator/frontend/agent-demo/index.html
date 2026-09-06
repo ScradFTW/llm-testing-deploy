@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#000000" />
+<meta name="description" content="A small tool-using reasoning agent, self-hosted on bradjobe.dev." />
+<title>Agent Demo — bradjobe.dev</title>
+<link rel="shortcut icon" href="/favicon.ico" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <a class="back" href="/">&larr; bradjobe.dev</a>
+      <nav class="demonav">
+        <a href="/ai/">Overview</a> ·
+        <a href="/llm-testing/">LLM serving</a> ·
+        <a href="/genre-classifier/">Classifier</a> ·
+        <a href="/status/">Telemetry</a>
+      </nav>
+      <h1>Reasoning agent, with one tool</h1>
+      <p class="subtitle">
+        This ties the other two demos together. The LLM
+        (<a href="/llm-testing/">/llm-testing</a>) can call the genre
+        classifier (<a href="/genre-classifier/">/genre-classifier</a>) as a
+        tool &mdash; but its own judgment about <em>when</em> to call it is
+        not trusted. A separate, deterministic guardrail decides that.
+      </p>
+      <button class="details-toggle" id="detailsToggle" aria-expanded="false" aria-controls="details">
+        How this is built <span class="chev">&#9662;</span>
+      </button>
+      <div class="details" id="details" hidden>
+        <dl>
+          <dt>Orchestration</dt>
+          <dd>A small Flask service (<code>agent-orchestrator</code>) sits between the LLM and the tool. It: asks the LLM whether the message needs the tool → checks that decision against a keyword guardrail → executes the tool only if both agree → asks the LLM again to phrase a final answer using the tool's result.</dd>
+          <dt>Why a separate guardrail</dt>
+          <dd>Tested empirically: this 0.5B model proposed the tool for "hello, how are you?" and "what is the capital of France?", and once invented an entirely different, unrequested tool. A tiny model's own judgment about tool relevance is not reliable enough to trust directly &mdash; see the live trigger-precision number below.</dd>
+          <dt>Failure handling</dt>
+          <dd>Every non-tool path (off-topic guardrail block, hallucinated/malformed tool call, tool-execution error) falls back to a normal conversational answer &mdash; the raw model output is never shown to the user directly.</dd>
+          <dt>Observability</dt>
+          <dd>Every request's outcome (proposed / blocked / malformed / executed) is counted and exposed at <a href="/status/">/status</a>, including the live tool-trigger precision.</dd>
+        </dl>
+      </div>
+    </header>
+
+    <main class="chat-card">
+      <div class="messages" id="messages" aria-live="polite">
+        <div class="msg msg-assistant">
+          <div class="bubble">Ask me something. Try a normal question, then try asking what genre a song is (e.g. "what genre is Yesterday by the Beatles?").</div>
+        </div>
+      </div>
+
+      <form class="composer" id="composer">
+        <textarea id="input" placeholder="Ask a question, or ask about a song's genre…" maxlength="300" rows="1" autocomplete="off"></textarea>
+        <button type="submit" id="sendBtn">Send</button>
+      </form>
+      <div class="statusline" id="statusline">&nbsp;</div>
+    </main>
+
+    <footer class="foot">
+      <span>Rate-limited, like the other demos. Each reply shows its agent trace (tool proposed / blocked / executed) below the message.</span>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,18 +1,26 @@
 # ML infra demos on bradjobe.dev
 
-Two self-hosted ML demos, both running on the same 1 vCPU / 2GB Linode VPS
-that serves bradjobe.dev, both built as production-infra portfolio pieces
-rather than API-key-and-a-widget demos:
+Four self-hosted pieces, all running on the same 1 vCPU / 2GB Linode VPS
+that serves bradjobe.dev, built as production-infra portfolio pieces rather
+than API-key-and-a-widget demos. **Start at
+[bradjobe.dev/ai](https://bradjobe.dev/ai/)** — it's the interviewer-facing
+overview that ties all four together with an explicit map to the job this
+was built for.
 
 - **`/llm-testing`** (this top-level README) — serving an existing
   open-weights LLM: model serving, reliability, observability, guardrails.
 - **[`/genre-classifier`](genre-classifier/README.md)** — training a model
   from scratch: data cleaning, evaluating a neural net against a classical
   baseline, and shipping the one that actually won.
+- **[`/agent-demo`](agent-orchestrator/README.md)** — a reasoning agent that
+  ties the two above together: the LLM can call the classifier as a tool,
+  gated by a deterministic guardrail because the LLM's own judgment about
+  *when* to call it turned out not to be trustworthy (measured, not assumed).
+- **[`/status`](status-dashboard/README.md)** — live telemetry polled
+  straight from each service's own in-process metrics.
 
 They share nginx, the Basic Auth credentials, and the "each service gets
-its own systemd unit + own port + memory cap" pattern — see
-`genre-classifier/README.md` for the second one.
+its own systemd unit + own port + memory cap" pattern.
 
 ---
 
@@ -113,10 +121,16 @@ anywhere.
 This is intentionally scoped as a solid single-box demo, not the
 full production stack:
 - No CI/CD — deploys are manual (see steps above).
-- No separate app-layer guardrail/moderation service — guardrails are
-  nginx- and context-window-based only.
-- No metrics dashboard — telemetry is raw JSON logs + journald, not
-  scraped/visualized (e.g. Prometheus/Grafana).
+- No cloud platform (AWS/GCP) or infrastructure-as-code — a single VPS
+  configured directly, not Terraform-managed.
+- No containers/orchestration — systemd units on bare metal, not
+  Docker/Kubernetes. Right-sized for four services on one box.
+- No GPU serving — CPU inference throughout, by necessity of the hardware.
+
+A dashboard now exists (`/status`, see `status-dashboard/README.md`) and a
+guardrailed tool-use agent now exists (`/agent-demo`, see
+`agent-orchestrator/README.md`) — both were gaps in an earlier version of
+this project and aren't anymore.
 
 ## What would change at "millions of users" scale
 
