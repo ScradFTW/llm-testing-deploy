@@ -35,6 +35,14 @@ resolved:
   under the portfolio's own webroot — so no future portfolio deploy can
   touch them.
 
+## Access control
+
+Both `/llm-testing/` and `/llm-testing/api/` are gated with nginx HTTP Basic
+Auth (`auth_basic` + `/etc/nginx/.htpasswd-llm-testing`, bcrypt-hashed via
+`htpasswd -B`). The htpasswd file is server-only and intentionally not in
+this repo. Credentials were shared with Brad directly, not committed
+anywhere.
+
 ## Why these choices
 
 - **Model**: Qwen2.5-0.5B-Instruct, Q4_K_M quantization. Small enough to run
