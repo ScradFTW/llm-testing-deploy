@@ -1,0 +1,7 @@
+# Pinned from `pip freeze` on the current VPS venv (2026-09-13), plus
+# google-auth (new) for the Cloud Run service-to-service ID token this
+# service now needs to call genre-classifier — see serve/app.py.
+Flask==3.1.3
+requests==2.34.2
+waitress==3.0.2
+google-auth==2.35.0

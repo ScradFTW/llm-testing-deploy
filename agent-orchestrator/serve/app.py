@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import re
 import threading
 import time
@@ -7,14 +8,40 @@ from collections import deque
 
 import requests
 from flask import Flask, request, jsonify, Response
+from google.auth.transport.requests import Request as GoogleAuthRequest
+from google.oauth2.id_token import fetch_id_token
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("agent-orchestrator")
 
-LLAMA_URL = "http://127.0.0.1:8082/v1/chat/completions"
-GENRE_URL = "http://127.0.0.1:8083/predict"
+# Both point at other Cloud Run services post-migration (see
+# bradjobe-dev-infra/cloud_run.tf, which sets these env vars) instead of
+# the old same-VPS 127.0.0.1 addresses.
+LLAMA_URL = os.environ.get("LLAMA_URL", "http://127.0.0.1:8082/v1/chat/completions")
+GENRE_URL = os.environ.get("GENRE_URL", "http://127.0.0.1:8083/predict")
 MAX_MESSAGE_LEN = 300
 MAX_TITLE_LEN = 120
+
+_google_auth_request = GoogleAuthRequest()
+
+
+def _genre_classifier_auth_header():
+    """Cloud Run requires an identity token to call genre-classifier, whose
+    ingress is locked to internal + load-balancer traffic (see
+    bradjobe-dev-infra's cloud_run.tf INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER
+    and the run.invoker grant scoped to this service's own account). Not
+    needed — and fetch_id_token would fail — when running locally against
+    127.0.0.1, so this degrades to no header outside Cloud Run.
+    """
+    if not GENRE_URL.startswith("https://"):
+        return {}
+    audience = GENRE_URL.split("/predict", 1)[0]
+    try:
+        token = fetch_id_token(_google_auth_request, audience)
+        return {"Authorization": f"Bearer {token}"}
+    except Exception:
+        log.exception("failed to mint ID token for genre-classifier; calling unauthenticated")
+        return {}
 
 # The model is only shown one tool. It is NOT trusted to decide on its own
 # whether the tool is relevant -- see GENRE_INTENT_RE below, which is the
@@ -91,7 +118,12 @@ def call_llama(messages, max_tokens=80):
 
 
 def call_genre_classifier(title):
-    resp = requests.post(GENRE_URL, json={"title": title}, timeout=10)
+    resp = requests.post(
+        GENRE_URL,
+        json={"title": title},
+        headers=_genre_classifier_auth_header(),
+        timeout=10,
+    )
     resp.raise_for_status()
     return resp.json()
 

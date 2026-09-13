@@ -1,0 +1,36 @@
+# Deploys on push to main when agent-orchestrator/** changes — see
+# bradjobe-dev-infra's cloudbuild_triggers.tf (google_cloudbuild_trigger.app["agent-orchestrator"]).
+steps:
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - agent-orchestrator/Dockerfile
+      - -t
+      - ${_ARTIFACT_REGISTRY}/agent-orchestrator:${SHORT_SHA}
+      - .
+
+  - id: push
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_ARTIFACT_REGISTRY}/agent-orchestrator:${SHORT_SHA}
+
+  - id: deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - agent-orchestrator
+      - --image=${_ARTIFACT_REGISTRY}/agent-orchestrator:${SHORT_SHA}
+      - --region=${_REGION}
+      - --quiet
+
+substitutions:
+  _REGION: northamerica-northeast1
+  _ARTIFACT_REGISTRY: northamerica-northeast1-docker.pkg.dev/bradjobe-dev/apps
+
+options:
+  logging: CLOUD_LOGGING_ONLY
