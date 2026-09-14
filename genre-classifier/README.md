@@ -52,20 +52,20 @@ simpler model won — so it's what's in production. Reaching for deep
 learning by default, without checking whether a cheaper model gets you
 further, is the mistake being avoided here.
 
-## Serving (`serve/`, `systemd/`)
+## Serving (`serve/`, `Dockerfile`)
 
 - `serve/app.py` — a small Flask app (`/health`, `/predict`) that loads the
   joblib-pickled scikit-learn pipeline once at startup.
-- Served by `waitress` (a real WSGI server, not Flask's dev server) via
-  `systemd/genre-classifier.service` — same pattern as `llama-server`:
-  `Restart=always`, `MemoryMax` cap, sandboxed, loopback-only
-  (`127.0.0.1:8083`).
-- nginx (`../nginx/genre-classifier.conf`, and the `/genre-classifier*`
-  blocks in `../nginx/bradjobe.dev-site.conf`) reverse-proxies, rate-limits,
-  and gates it behind the same HTTP Basic Auth as `/llm-testing`.
-- Static frontend served from `/var/www/genre-classifier/` — outside
-  `/var/www/html` for the same reason as `/llm-testing` (see the top-level
-  README's note on the portfolio's own deploy process).
+- Served by `waitress` (a real WSGI server, not Flask's dev server) inside
+  a container on Cloud Run (own least-privilege IAM service account,
+  autoscale-to-zero, no direct public URL — see `bradjobe-dev-infra`'s
+  `cloud_run.tf`).
+- Reached at `/genre-classifier/api/*` through the shared Global Load
+  Balancer, which applies a Cloud Armor rate limit (`demo_api_rate_limit`)
+  in front of it. `agent-orchestrator` also calls it directly, over its
+  private Cloud Run URL, authenticated with a Google-minted ID token.
+- Frontend is a tab in the `demos-ui` repo's `ai-tools` SPA, served at
+  `/genre-classifier/` by a separate Cloud Run service.
 
 ## Reproducing
 

@@ -4,7 +4,7 @@ Live at: https://bradjobe.dev/image-classifier/
 
 The fourth demo, and the first that isn't text: a small CNN trained from
 scratch on CIFAR-10, exported to ONNX, and served with ONNX Runtime — no
-PyTorch on the VPS at all. Added specifically because the other three
+PyTorch anywhere in production at all. Added specifically because the other three
 demos are 100% text/NLP, and a computer-vision role should have a
 computer-vision artifact, not just an LLM chat widget.
 
@@ -33,18 +33,19 @@ good. Only then does the `.onnx` file, plus the normalization constants
 and class list, get copied to the server.
 
 `serve/app.py` loads that ONNX file with `onnxruntime` (CPU execution
-provider) — no PyTorch, no CUDA, nothing GPU-related on the VPS. Memory
-footprint at rest is about 50MB, inference is 1-5ms per image. This is the
-real pattern for "train expensive, serve cheap": the GPU-hours are spent
-once, offline, on hardware that has them; the always-on production service
-runs on hardware that doesn't need them.
+provider) — no PyTorch, no CUDA, nothing GPU-related in the serving
+container. Memory footprint at rest is about 50MB, inference is 1-5ms per
+image. This is the real pattern for "train expensive, serve cheap": the
+GPU-hours are spent once, offline, on hardware that has them; the
+always-on production service runs on hardware that doesn't need them.
 
 ## Serving
 
-Same pattern as every other service here: Flask + waitress,
-`systemd/image-classifier.service` (loopback-only on `127.0.0.1:8085`,
-`MemoryMax`, sandboxed), nginx reverse proxy + rate limiting, same Basic
-Auth. `/predict` takes a base64-encoded image (or a `data:` URL directly
+Same pattern as every other service here: Flask + waitress in a container
+on Cloud Run (own least-privilege IAM service account, no direct public
+URL), reached through the shared Global Load Balancer with a Cloud Armor
+rate limit in front of it (see `bradjobe-dev-infra`'s `cloud_run.tf` /
+`cloud_armor.tf`). `/predict` takes a base64-encoded image (or a `data:` URL directly
 from a `<input type=file>`/drag-and-drop, which is what the frontend
 sends), resizes to 32×32, and returns the ranked class probabilities.
 `/stats` and `/metrics` follow the same telemetry pattern as

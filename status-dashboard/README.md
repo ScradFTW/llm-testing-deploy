@@ -11,23 +11,25 @@ malformed).
 
 ## Why in-process counters instead of Prometheus/Grafana
 
-At three low-traffic services on a single 2GB box, running a full metrics
-stack would cost more memory than the services being monitored. Both
-`genre-classifier` and `agent-orchestrator` keep a small in-memory counter
-set (`threading.Lock` + a bounded `deque` for latency samples and recent
-events) and expose it two ways:
+For three low-traffic Cloud Run services, standing up a full metrics stack
+(Cloud Monitoring aside) would be more operational surface than the thing
+being monitored. Both `genre-classifier` and `agent-orchestrator` keep a
+small in-memory counter set (`threading.Lock` + a bounded `deque` for
+latency samples and recent events) and expose it two ways:
 
 - `/stats` — JSON, consumed by this dashboard.
 - `/metrics` — Prometheus text exposition format, so the same data could be
-  scraped by a real Prometheus instance without any code changes if this
-  ever needed to graduate off a single box.
+  scraped by a real Prometheus instance without any code changes, if this
+  ever grew past a couple of Cloud Run services worth graphing that way.
 
-nginx proxies `/status/api/agent-stats` → `agent-orchestrator:8084/stats`
-and `/status/api/genre-stats` → `genre-classifier:8083/stats`.
-`llama-server` has no HTTP stats endpoint of its own; its per-request
-timing (prompt/eval tokens-per-second) goes to the systemd journal instead
-(`journalctl -u llama-server`) and is represented on the dashboard
-indirectly, through the agent-orchestrator calls that depend on it.
+The load balancer's URL map rewrites `/status/api/agent-stats` →
+`agent-orchestrator`'s `/stats` and `/status/api/genre-stats` →
+`genre-classifier`'s `/stats` (see `bradjobe-dev-infra`'s `lb.tf` route
+rules — each is its own Cloud Run backend service now, not a port on a
+shared box). `llama-server` has no HTTP stats endpoint of its own; its
+per-request timing (prompt/eval tokens-per-second) goes to its GKE pod
+logs instead and is represented on the dashboard indirectly, through the
+agent-orchestrator calls that depend on it.
 
 ## What it's for
 

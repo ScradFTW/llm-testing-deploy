@@ -38,8 +38,9 @@ model's proposed tool call as a *suggestion*, not a decision.
      - Keywords absent → the model wanted to call the tool, but the
        message doesn't look like a genre question. Block it, re-ask with a
        plain prompt. (`tool_blocked`)
-     - Keywords present → call `genre-classifier` over loopback, then ask
-       the LLM once more to phrase a final answer using the result.
+     - Keywords present → call `genre-classifier` over its private Cloud Run
+       URL (ID-token authenticated, not loopback anymore — see below), then
+       ask the LLM once more to phrase a final answer using the result.
        (`tool_executed`)
 3. Every outcome is counted and the last 50 are kept in memory for
    `/stats` — see `../status-dashboard/`.
@@ -55,7 +56,10 @@ even when it's wrong most of the time.
 
 ## Serving
 
-Same pattern as the other two services: Flask + waitress,
-`systemd/agent-orchestrator.service` (`Restart=always`, `MemoryMax`,
-sandboxed, loopback-only on `127.0.0.1:8084`), reverse-proxied and rate
-limited by nginx, behind the same Basic Auth.
+Same pattern as the other two services: Flask + waitress in a container on
+Cloud Run (own least-privilege IAM service account, no direct public URL),
+reached through the shared Global Load Balancer with a Cloud Armor rate
+limit in front of it. Calls the LLM over its public GKE subdomain
+(`llm.bradjobe.dev`) and `genre-classifier` over a private Cloud Run URL,
+authenticated with a Google-minted ID token scoped to this service's own
+account — see `bradjobe-dev-infra`'s `cloud_run.tf`.
