@@ -1,0 +1,4 @@
+# Test-only dependencies, not needed in the deployed image. Installed on
+# top of requirements.txt by cloudbuild.yaml's test step and for local
+# `pytest` runs.
+pytest==9.1.1

@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 dataset.csv
 *.jsonl
+.pytest_cache/
